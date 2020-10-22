@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoorExcel", "PoorExcel\PoorExcel.csproj", "{EA96ADF3-88E5-4043-975E-8B5A9FE841C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabaTests", "LabaTests\LabaTests.csproj", "{ABE83888-4265-426B-8A6B-9AFC6835F8EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA96ADF3-88E5-4043-975E-8B5A9FE841C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA96ADF3-88E5-4043-975E-8B5A9FE841C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA96ADF3-88E5-4043-975E-8B5A9FE841C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA96ADF3-88E5-4043-975E-8B5A9FE841C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABE83888-4265-426B-8A6B-9AFC6835F8EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABE83888-4265-426B-8A6B-9AFC6835F8EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABE83888-4265-426B-8A6B-9AFC6835F8EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABE83888-4265-426B-8A6B-9AFC6835F8EE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B3245F3D-4083-4852-925B-31E693B5D942}
+	EndGlobalSection
+EndGlobal
