@@ -5,12 +5,15 @@ using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Threading;
 
 namespace PoorExcel
 {
 
     class PoorVisitor : PoorGrammarBaseVisitor<double>
     {
+        private string _routeCell = "";
+
         public override double VisitCompileUnit([NotNull] PoorGrammarParser.CompileUnitContext context)
         {
             return Visit(context.expression());
@@ -29,18 +32,32 @@ namespace PoorExcel
             var result = context.GetText();
             double value = 0.0;
 
-             if (PoorEcxel._indeces.ContainsKey(result))
-             {
-                Index index = new Index(PoorEcxel._indeces[result].x, PoorEcxel._indeces[result].y);
-                if (!PoorEcxel._indexToCell.ContainsKey(index))
+            if (result[result.Length - 1] == '=')
+            {
+                _routeCell = result.Remove(result.Length - 1);
+            }
+            else
+            {
+                if (PoorEcxel.indeces.ContainsKey(result))
                 {
-                    PoorEcxel._indexToCell.Add(index, new PoorCell(PoorEcxel._indeces[result].x, PoorEcxel._indeces[result].y, "0"));
-                }
+                    Index index = new Index(PoorEcxel.indeces[result].x, PoorEcxel.indeces[result].y);
 
-                string expr = PoorEcxel._indexToCell[index].Result;
-                value = PoorCalculator.Evaluate(expr);
+                    if (!PoorEcxel.indexToCell.ContainsKey(index))
+                    {
+                        PoorEcxel.indexToCell.Add(index, new PoorCell(PoorEcxel.indeces[result].x, PoorEcxel.indeces[result].y, "0"));
+                    }
+
+                    string expr = PoorEcxel.indexToCell[index].Result;
+
+                    if (PoorEcxel.indexToCell[index].Expression.Contains(_routeCell))
+                    //Клітинка посилається на іншу клітинку, яка вже містить посилання на першу
+                    {
+                        throw new LockRecursionException();
+                    }
+
+                    value = PoorCalculator.Evaluate(expr);
                 }
-        
+            }
             return value;
         }
 
@@ -87,6 +104,10 @@ namespace PoorExcel
             }
             else
             {
+                if (right == 0)
+                {
+                    throw new DivideByZeroException();
+                }
                 Debug.WriteLine("{0}/{1}", left, right);
                 return left / right;
             }

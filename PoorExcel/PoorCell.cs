@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Windows.Forms;
@@ -62,10 +63,17 @@ namespace PoorExcel
         private string CalcExpr(string expr)
         //Підрахунок значення виразу
         {
-            if (expr.Length > 0 && expr[0] == '=')
+            //try
+            //{
+                if (expr.Length > 0 && expr[0] == '=')
+                {
+                    return PoorCalculator.Evaluate(_column + _row.ToString() + "=+" + expr.Substring(1)).ToString();
+                }
+            /*}
+            catch (DivideByZeroException exc)
             {
-                return PoorCalculator.Evaluate(_column + _row.ToString() + "=+" + expr.Substring(1)).ToString();
-            }
+                MessageBox.Show(exc.Message);
+            }*/
             return expr;
         }
 

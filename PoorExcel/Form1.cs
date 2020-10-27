@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -47,13 +48,12 @@ namespace PoorExcel
 
     public partial class PoorEcxel : Form
     {
-        public static Dictionary<Index, PoorCell> _indexToCell =
-            new Dictionary<Index, PoorCell>();
+        public static Dictionary<Index, PoorCell> indexToCell = new Dictionary<Index, PoorCell>(); //Словник для зберігання непорожніх клітинок         
 
-        public static Dictionary<string, Coord> _indeces = new Dictionary<string, Coord>();
-        public static  Dictionary<Coord, string> _coords = new Dictionary<Coord, string>();
+        public static Dictionary<string, Coord> indeces = new Dictionary<string, Coord>();         //Словник буквенна адреса - координати
+        public static  Dictionary<Coord, string> coords = new Dictionary<Coord, string>();         //Словник координати - буквенна адреса
 
-        private Coord _tableSize = new Coord();
+        private Coord _tableSize = new Coord();                                                     //Розмір таблиці
 
         public static Dictionary<Coord, List<Coord>> refs = new Dictionary<Coord, List<Coord>>();
 
@@ -62,6 +62,8 @@ namespace PoorExcel
             InitializeComponent();
             setTableDefault();
         }
+        
+        #region Редагування таблиці
 
         private void setTableDefault()
         //За замовчуванням створюється таблиця 50х50
@@ -70,7 +72,7 @@ namespace PoorExcel
         }
 
         private void setTable(int w, int h)
-        //Створюється таблиця w на h, заповнюються словники _indexToCell, _indeces, _coords;
+        //Створюється таблиця w на h, заповнюються словники indexToCell, indeces, coords;
         //установлюється значення _tableSize
         {
             dataGrid.RowsDefaultCellStyle.SelectionBackColor = Color.DarkSeaGreen;
@@ -85,12 +87,10 @@ namespace PoorExcel
                 string column = PoorCalculator.GetColumnIndex(i);
                 for (int j = 0; j < h; ++j)
                 {
-                    _indeces[column + j.ToString()] = new Coord(i, j);
-                    _coords[new Coord(i, j)] = column + j.ToString();
+                    indeces[column + j.ToString()] = new Coord(i, j);
+                    coords[new Coord(i, j)] = column + j.ToString();
                 }
             }
-
-         //   _tableSize = new Coord(w, h);
         }
 
         private void AddRow(int number)
@@ -101,6 +101,20 @@ namespace PoorExcel
             row.DefaultCellStyle.BackColor = Color.AliceBlue;
             dataGrid.Rows.Add(row);
             ++_tableSize.y;
+
+            for (int x = 0; x < _tableSize.x; ++x)
+            {
+                Coord coord = new Coord(x, number);
+                string index = PoorCalculator.GetIndex(x, number);
+                if (!coords.ContainsKey(coord))
+                {
+                    coords.Add(coord, index);
+                }
+                if (!indeces.ContainsKey(index))
+                {
+                    indeces.Add(index, coord);
+                }
+            }
         }
 
         private void AddColumn(int number)
@@ -112,52 +126,72 @@ namespace PoorExcel
             column.DefaultCellStyle.BackColor = Color.AliceBlue;
             dataGrid.Columns.Add(column);
             ++_tableSize.x;
+            for (int y = 0; y < _tableSize.y; ++y)
+            {
+                Coord coord = new Coord(number, y);
+                string index = PoorCalculator.GetIndex(number, y);
+                if (!coords.ContainsKey(coord))
+                {
+                    coords.Add(coord, index);
+                }
+                if (!indeces.ContainsKey(index))
+                {
+                    indeces.Add(index, coord);
+                }
+            }
         }
 
         private void DataGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         //Оновлюється значення в клітинці. Додається новий елемент до
-        //_indexToCell, якщо значення вписується вперше
+        //indexToCell, якщо значення вписується вперше
         {
             int x = e.ColumnIndex;
             int y = e.RowIndex;
+            Index index = new Index(x, y);
+            string value = "";
+
 
             try
             {
-                Index index = new Index(x, y);
-                string value = "";
-
                 if (dataGrid.Rows[y].Cells[x].Value != null)
                 {
                     value = dataGrid.Rows[y].Cells[x].Value.ToString();
                 }
 
-                if (!_indexToCell.ContainsKey(index))
+                PoorCell cell = new PoorCell(x, y, value);
+
+                if (!indexToCell.ContainsKey(index))
                 {
-                    _indexToCell.Add(index, new PoorCell(x, y, value));
+                    indexToCell.Add(index, cell);
                 }
                 else
                 {
                     //Вираз записується лише при введенні в режимі відображення ВИРАЗ,
                     //або при введенні з тектового рядку
-                    if (!_indexToCell[index].IsResultShown)
+                    if (!indexToCell[index].IsResultShown)
                     {
-                        _indexToCell[index].Expression = value;
+                        indexToCell[index].Expression = value;
                     }
                 }
-
-                if (_indexToCell[index].Expression == _indexToCell[index].Result && _indexToCell[index].Result == "")
+            
+                if (indexToCell[index].Expression == indexToCell[index].Result && indexToCell[index].Result == "")
                 {
-                    _indexToCell.Remove(index);
+                    indexToCell.Remove(index);
                 }
                 else
                 {
-                    dataGrid.Rows[y].Cells[x].Value = _indexToCell[index].GetContent();
+                    dataGrid.Rows[y].Cells[x].Value = indexToCell[index].GetContent();
                 }
+    
                 UpdateTable();
             }
-            catch (ArgumentException exc)
+            catch (DivideByZeroException exc)
             {
-                dataGrid.Rows[y].Cells[x].Value = exc.Message;
+                MessageBox.Show("Помилка: спроба ділення на нуль!");
+            }
+            catch (LockRecursionException exc)
+            {
+                MessageBox.Show("Помилка: вираз створює рекурсію!");
             }
         }
 
@@ -172,16 +206,16 @@ namespace PoorExcel
             {
                 Index index = new Index(x, y);
 
-                if (_indexToCell.ContainsKey(index))
+                if (indexToCell.ContainsKey(index))
                 {
-                    textBoxExpression.Text = _indexToCell[index].Expression;
+                    textBoxExpression.Text = indexToCell[index].Expression;
                 }
                 else
                 {
                     textBoxExpression.Text = "";
                 }
 
-                textBoxIndex.Text = _coords[new Coord(x, y)];
+                textBoxIndex.Text = coords[new Coord(x, y)];
             }
 
             if (y == -1)
@@ -198,30 +232,6 @@ namespace PoorExcel
             }
         }
 
-        private void TextBoxExpression_LostFocus(object sender, EventArgs e)
-        //У виділені клітинки записується вираз з textBoxExpression після виходу з нього
-        {
-            foreach (DataGridViewCell item in dataGrid.SelectedCells)
-            {
-                int x = item.ColumnIndex;
-                int y = item.RowIndex;
-                Index index = new Index(x, y);
-                string text = textBoxExpression.Text;
-
-                if (_indexToCell.ContainsKey(index))
-                {
-                    _indexToCell[index].Expression = text;
-                    item.Value = _indexToCell[index].GetContent();
-                    UpdateTable();
-                }
-                else
-                {
-                    _indexToCell.Add(index, new PoorCell(x, y, text));
-                    item.Value = text;
-                }
-            }
-        }
-
         private void buttonDisplay_Click(object sender, EventArgs e)
         //Змінюється режим відображення клітинки: ВИРАЗ/ЗНАЧЕННЯ
         {
@@ -234,36 +244,46 @@ namespace PoorExcel
                 buttonDisplay.Text = "РЕЗУЛЬТАТ";
             }
 
-            foreach (var item in _indexToCell)
+            foreach (var item in indexToCell)
             {
                 item.Value.IsResultShown = !item.Value.IsResultShown;
                 dataGrid.Rows[item.Key.y].Cells[item.Key.x].Value = item.Value.GetContent();
             }
         }
+        private void UpdateTable()
+        //Оновлення значень клітинок таблиці
+        {
+            foreach (var cell in indexToCell)
+            {
+                cell.Value.UpdateCell();
+                dataGrid.Rows[cell.Key.y].Cells[cell.Key.x].Value = cell.Value.GetContent();
+            }
+        }
+
+        #endregion
+
+        #region Робота з TextBox
 
         private void TextBoxIndex_LostFocus(object sender, EventArgs e)
         //Виділяється клітинка з індексом, указаним в
         //textBoxIndex
         {
-            if (_indeces.ContainsKey(textBoxIndex.Text))
+            if (indeces.ContainsKey(textBoxIndex.Text))
             {
                 foreach (DataGridViewCell item in dataGrid.SelectedCells)
                 {
                     item.Selected = false;
                 }
-                int x = _indeces[textBoxIndex.Text].x;
-                int y = _indeces[textBoxIndex.Text].y;
+                int x = indeces[textBoxIndex.Text].x;
+                int y = indeces[textBoxIndex.Text].y;
                 dataGrid.Rows[y].Cells[x].Selected = true;
                 dataGrid.FirstDisplayedCell = dataGrid.SelectedCells[0];
             }
             else
             {
-                foreach (DataGridViewCell item in dataGrid.SelectedCells)
-                {
-                    textBoxIndex.Text = _indexToCell[new Index(item.ColumnIndex, item.RowIndex)].GetContent();
-                    break;
-                }
+                MessageBox.Show("Помилка: указаної клітинки не існує!");
             }
+
         }
 
         private void TextBoxExpression_KeyPressed(object sender, KeyEventArgs e)
@@ -286,20 +306,51 @@ namespace PoorExcel
             }
         }
 
-        private void ToolStripButtonSave_ButtonClick(Object sender, EventArgs e)
-        //Виклик методу для збереження таблиці
+        private void ResetTable()
+        //Обнулення таблиці
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "pxcl files (*.pxcl)|*.pxcl";
-            saveFileDialog.ShowDialog();
+            indexToCell.Clear();
+            indeces.Clear();
+            coords.Clear();
+            _tableSize = new Coord();
+            dataGrid.Rows.Clear();
+            dataGrid.Columns.Clear();
+        }
 
-            string path = saveFileDialog.FileName;
-            if (path.Length > 0)
+        private void TextBoxExpression_LostFocus(object sender, EventArgs e)
+        //У виділені клітинки записується вираз з textBoxExpression після виходу з нього
+        {
+            try
             {
-                SaveFile(path);
-                MessageBox.Show("Успішно збережено до\n" + path);
+                foreach (DataGridViewCell item in dataGrid.SelectedCells)
+                {
+                    int x = item.ColumnIndex;
+                    int y = item.RowIndex;
+                    Index index = new Index(x, y);
+                    string text = textBoxExpression.Text;
+
+                    if (indexToCell.ContainsKey(index))
+                    {
+                        indexToCell[index].Expression = text;
+                        item.Value = indexToCell[index].GetContent();
+                        UpdateTable();
+                    }
+                    else
+                    {
+                        indexToCell.Add(index, new PoorCell(x, y, text));
+                        item.Value = text;
+                    }
+                }
+            }
+            catch (LockRecursionException exc)
+            {
+                MessageBox.Show("Помилка: вираз створює рекурсію!");
             }
         }
+
+        #endregion
+
+        #region Обробка натискання ToolStrip кнопок
 
         private void ToolStripButtonOpen_ButtonClick(Object sender, EventArgs e)
         //Виклик методу для відкриття таблиці
@@ -316,6 +367,21 @@ namespace PoorExcel
             if (path.Length > 0)
             {
                 ReadFile(path);
+            }
+        }
+
+        private void ToolStripButtonSave_ButtonClick(Object sender, EventArgs e)
+        //Виклик методу для збереження таблиці
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "pxcl files (*.pxcl)|*.pxcl";
+            saveFileDialog.ShowDialog();
+
+            string path = saveFileDialog.FileName;
+            if (path.Length > 0)
+            {
+                SaveFile(path);
+                MessageBox.Show("Успішно збережено до\n" + path);
             }
         }
 
@@ -364,15 +430,30 @@ namespace PoorExcel
             bool canRemove = true;
             for (int x = 0; x < _tableSize.x; ++x)
             {
-                if (_indexToCell.ContainsKey(new Index(x, _tableSize.y - 1)))
+                if (indexToCell.ContainsKey(new Index(x, _tableSize.y - 1)))
                 {
                     canRemove = false;
+                    MessageBox.Show("Hеможливо видалити непорожній рядок");
                 }
             }
 
             if (canRemove)
             {
                 dataGrid.Rows.RemoveAt(--_tableSize.y);
+
+                for (int x = 0; x < _tableSize.x; ++x)
+                {
+                    Coord coord = new Coord(x, _tableSize.y);
+                    string index = PoorCalculator.GetIndex(x, _tableSize.y);
+                    if (coords.ContainsKey(coord))
+                    {
+                        coords.Remove(coord);
+                    }
+                    if (indeces.ContainsKey(index))
+                    {
+                        indeces.Remove(index);
+                    }
+                }
             }
         }
 
@@ -382,17 +463,35 @@ namespace PoorExcel
             bool canRemove = true;
             for (int y = 0; y < _tableSize.y; ++y)
             {
-                if (_indexToCell.ContainsKey(new Index(_tableSize.x - 1, y)))
+                if (indexToCell.ContainsKey(new Index(_tableSize.x - 1, y)))
                 {
                     canRemove = false;
+                    MessageBox.Show("Hеможливо видалити непорожній стовпчик");
                 }
             }
 
             if (canRemove)
             {
                 dataGrid.Columns.RemoveAt(--_tableSize.x);
+                for (int y = 0; y < _tableSize.y; ++y)
+                {
+                    Coord coord = new Coord(_tableSize.x, y);
+                    string index = PoorCalculator.GetIndex(_tableSize.x, y);
+                    if (coords.ContainsKey(coord))
+                    {
+                        coords.Remove(coord);
+                    }
+                    if (indeces.ContainsKey(index))
+                    {
+                        indeces.Remove(index);
+                    }
+                }
             }
         }
+
+        #endregion
+
+        #region Збереження й відкривання файллів
 
         private void SaveFile(string path)
         //Збереження таблиці
@@ -401,7 +500,8 @@ namespace PoorExcel
 
             AddText(fStream, _tableSize.x.ToString() + " " + _tableSize.y.ToString() + Environment.NewLine);
 
-            foreach (var cell in _indexToCell) {
+            foreach (var cell in indexToCell)
+            {
                 AddText(fStream, cell.Key.y.ToString() + " " + cell.Key.x.ToString() + " " + cell.Value.Expression.ToString() + Environment.NewLine);
             }
 
@@ -414,7 +514,7 @@ namespace PoorExcel
             byte[] info = new UTF8Encoding(true).GetBytes(text);
             fStream.Write(info, 0, text.Length);
         }
-        
+
         private void ReadFile(string path)
         //Створення таблиці з відкритого файлу
         {
@@ -439,40 +539,18 @@ namespace PoorExcel
                     divider = temp.IndexOf(" ") + 1;
                     temp = temp.Substring(divider);
                     string expr = temp;
-                    if (!_indexToCell.ContainsKey(new Index(x, y)))
+                    if (!indexToCell.ContainsKey(new Index(x, y)))
                     {
-                        _indexToCell.Add(new Index(x, y), new PoorCell(x, y, expr));
+                        indexToCell.Add(new Index(x, y), new PoorCell(x, y, expr));
                     }
                     else
                     {
-                        _indexToCell[new Index(x, y)] = new PoorCell(x, y, expr);
+                        indexToCell[new Index(x, y)] = new PoorCell(x, y, expr);
                     }
                 }
                 UpdateTable();
             }
         }
-
-        private void ResetTable()
-        //Обнулення таблиці
-        {
-            _indexToCell.Clear();
-            _indeces.Clear();
-            _coords.Clear();
-            _tableSize = new Coord();
-            dataGrid.Rows.Clear();
-            dataGrid.Columns.Clear();
-        }
-
-        private void UpdateTable()
-        //Оновлення значень клітинок таблиці
-        {
-            foreach (var cell in _indexToCell)
-            {
-                cell.Value.UpdateCell();
-                dataGrid.Rows[cell.Key.y].Cells[cell.Key.x].Value = cell.Value.GetContent();
-            }
-        }
+        #endregion
     }
 }
-
-
