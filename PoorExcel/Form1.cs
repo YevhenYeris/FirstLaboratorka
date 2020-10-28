@@ -53,9 +53,7 @@ namespace PoorExcel
         public static Dictionary<string, Coord> indeces = new Dictionary<string, Coord>();         //Словник буквенна адреса - координати
         public static  Dictionary<Coord, string> coords = new Dictionary<Coord, string>();         //Словник координати - буквенна адреса
 
-        private Coord _tableSize = new Coord();                                                     //Розмір таблиці
-
-        public static Dictionary<Coord, List<Coord>> refs = new Dictionary<Coord, List<Coord>>();
+        private Coord _tableSize = new Coord();                                                    //Розмір таблиці
 
         public PoorEcxel()
         {
@@ -187,11 +185,15 @@ namespace PoorExcel
             }
             catch (DivideByZeroException exc)
             {
-                MessageBox.Show("Помилка: спроба ділення на нуль!");
+                MessageBox.Show("Помилка: спроба ділення на нуль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (LockRecursionException exc)
             {
-                MessageBox.Show("Помилка: вираз створює рекурсію!");
+                MessageBox.Show("Помилка: вираз створює рекурсію!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show("Помилка: " + exc.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -253,10 +255,13 @@ namespace PoorExcel
         private void UpdateTable()
         //Оновлення значень клітинок таблиці
         {
-            foreach (var cell in indexToCell)
+            for (int i = 0; i < indexToCell.Count; ++i)
             {
-                cell.Value.UpdateCell();
-                dataGrid.Rows[cell.Key.y].Cells[cell.Key.x].Value = cell.Value.GetContent();
+                int x = indexToCell.ElementAt(i).Key.x;
+                int y = indexToCell.ElementAt(i).Key.y;
+
+                indexToCell.ElementAt(i).Value.UpdateCell();
+                dataGrid.Rows[y].Cells[x].Value= indexToCell.ElementAt(i).Value.GetContent();
             }
         }
 
@@ -281,7 +286,7 @@ namespace PoorExcel
             }
             else
             {
-                MessageBox.Show("Помилка: указаної клітинки не існує!");
+                MessageBox.Show("Помилка: указаної клітинки не існує!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
         }
@@ -342,9 +347,17 @@ namespace PoorExcel
                     }
                 }
             }
+            catch (DivideByZeroException exc)
+            {
+                MessageBox.Show("Помилка: спроба ділення на нуль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             catch (LockRecursionException exc)
             {
-                MessageBox.Show("Помилка: вираз створює рекурсію!");
+                MessageBox.Show("Помилка: вираз створює рекурсію!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show("Помилка: " + exc.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -355,18 +368,22 @@ namespace PoorExcel
         private void ToolStripButtonOpen_ButtonClick(Object sender, EventArgs e)
         //Виклик методу для відкриття таблиці
         {
-            DialogResult dialogResult = MessageBox.Show("Зберегти цю таблицю перед створення нової?", "", MessageBoxButtons.YesNo);
+            DialogResult dialogResult = MessageBox.Show("Зберегти цю таблицю перед створення нової?", "Попередження",
+                                                                       MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             if (dialogResult == DialogResult.Yes)
             {
                 ToolStripButtonSave_ButtonClick(sender, e);
             }
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "pxcl files (*.pxcl)|*.pxcl";
-            openFileDialog.ShowDialog();
-            string path = openFileDialog.FileName;
-            if (path.Length > 0)
+            else if (dialogResult != DialogResult.Cancel)
             {
-                ReadFile(path);
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = "pxcl files (*.pxcl)|*.pxcl";
+                openFileDialog.ShowDialog();
+                string path = openFileDialog.FileName;
+                if (path.Length > 0)
+                {
+                    ReadFile(path);
+                }
             }
         }
 
@@ -381,21 +398,24 @@ namespace PoorExcel
             if (path.Length > 0)
             {
                 SaveFile(path);
-                MessageBox.Show("Успішно збережено до\n" + path);
+                MessageBox.Show("Успішно збережено до\n" + path, "Збержено", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
         private void ToolStripButtonNew_ButtonClick(Object sender, EventArgs e)
         //Виклик методу для створення нової таблиці
         {
-            DialogResult dialogResult = MessageBox.Show("Зберегти цю таблицю перед створення нової?", "", MessageBoxButtons.YesNo);
+            DialogResult dialogResult = MessageBox.Show("Зберегти цю таблицю перед створення нової?",
+                                                                    "", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
             if (dialogResult == DialogResult.Yes)
             {
                 ToolStripButtonSave_ButtonClick(sender, e);
             }
-
-            ResetTable();
-            setTableDefault();
+            else if (dialogResult != DialogResult.Cancel)
+            {
+                ResetTable();
+                setTableDefault();
+            }
         }
 
         private void ToolStripButtonHelp_ButtonClick(Object sender, EventArgs e)
@@ -408,8 +428,9 @@ namespace PoorExcel
                 "inc dec min max\n" +
                 "> < == <= >= not\n" +
                 "Синтаксис виразу:\n" +
-                "=*вираз*";
-            MessageBox.Show(text);
+                "=*вираз*\n" +
+                "Використовуються цілі числа."; 
+            MessageBox.Show(text, "Довідка", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void AddRow_Click(Object sender, EventArgs e)
@@ -427,13 +448,21 @@ namespace PoorExcel
         private void DeleteRow_Click(Object sender, EventArgs e)
         //Видалення рядку
         {
+            if (!DeleteRow())
+            {
+                MessageBox.Show("Hеможливо видалити непорожній рядок", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public bool DeleteRow()
+        {
             bool canRemove = true;
+
             for (int x = 0; x < _tableSize.x; ++x)
             {
                 if (indexToCell.ContainsKey(new Index(x, _tableSize.y - 1)))
                 {
-                    canRemove = false;
-                    MessageBox.Show("Hеможливо видалити непорожній рядок");
+                    return false;
                 }
             }
 
@@ -455,6 +484,8 @@ namespace PoorExcel
                     }
                 }
             }
+
+            return true;
         }
 
         private void DeleteColumn_Click(Object sender, EventArgs e)
@@ -466,7 +497,7 @@ namespace PoorExcel
                 if (indexToCell.ContainsKey(new Index(_tableSize.x - 1, y)))
                 {
                     canRemove = false;
-                    MessageBox.Show("Hеможливо видалити непорожній стовпчик");
+                    MessageBox.Show("Hеможливо видалити непорожній стовпчик", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
@@ -552,5 +583,27 @@ namespace PoorExcel
             }
         }
         #endregion
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (AskExit() == false)
+            {
+                e.Cancel = true;
+            };
+        }
+
+        public static bool AskExit()
+        {
+            const string message = "Ви дійсно бажаєте закрити програму?";
+            const string caption = "Закрити програму";
+            var result = MessageBox.Show(message, caption,
+                                         MessageBoxButtons.YesNo,
+                                         MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+                return true;
+            else
+                return false;
+        }
     }
 }

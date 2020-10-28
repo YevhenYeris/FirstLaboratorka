@@ -60,7 +60,7 @@ namespace PoorExcel
             Expression = expr;
         }
 
-        private string CalcExpr(string expr)
+        public string CalcExpr(string expr)
         //Підрахунок значення виразу
         {
             //try

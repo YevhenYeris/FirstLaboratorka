@@ -10,27 +10,27 @@ using System.Threading;
 namespace PoorExcel
 {
 
-    class PoorVisitor : PoorGrammarBaseVisitor<double>
+    class PoorVisitor : PoorGrammarBaseVisitor<int>
     {
         private string _routeCell = "";
 
-        public override double VisitCompileUnit([NotNull] PoorGrammarParser.CompileUnitContext context)
+        public override int VisitCompileUnit([NotNull] PoorGrammarParser.CompileUnitContext context)
         {
             return Visit(context.expression());
         }
 
-        public override double VisitNumberExpr([NotNull] PoorGrammarParser.NumberExprContext context)
+        public override int VisitNumberExpr([NotNull] PoorGrammarParser.NumberExprContext context)
         {
-            var result = double.Parse(context.GetText());
+            var result = int.Parse(context.GetText());
             Debug.WriteLine(result);
 
             return result;
         }
 
-        public override double VisitIdentifierExpr([NotNull] PoorGrammarParser.IdentifierExprContext context)
+        public override int VisitIdentifierExpr([NotNull] PoorGrammarParser.IdentifierExprContext context)
         {
             var result = context.GetText();
-            double value = 0.0;
+            int value = 0;
 
             if (result[result.Length - 1] == '=')
             {
@@ -61,21 +61,21 @@ namespace PoorExcel
             return value;
         }
 
-        public override double VisitParenthesizedExpr([NotNull] PoorGrammarParser.ParenthesizedExprContext context)
+        public override int VisitParenthesizedExpr([NotNull] PoorGrammarParser.ParenthesizedExprContext context)
         {
             return Visit(context.expression());
         }
 
-        public override double VisitExponentialExpr([NotNull] PoorGrammarParser.ExponentialExprContext context)
+        public override int VisitExponentialExpr([NotNull] PoorGrammarParser.ExponentialExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
 
             Debug.WriteLine("{0}^{1}", left, right);
-            return System.Math.Pow(left, right);
+            return (int)System.Math.Pow(left, right);
         }
 
-        public override double VisitAdditiveExpr([NotNull] PoorGrammarParser.AdditiveExprContext context)
+        public override int VisitAdditiveExpr([NotNull] PoorGrammarParser.AdditiveExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
@@ -92,7 +92,7 @@ namespace PoorExcel
             }
         }
 
-        public override double VisitMultiplicativeExpr([NotNull] PoorGrammarParser.MultiplicativeExprContext context)
+        public override int VisitMultiplicativeExpr([NotNull] PoorGrammarParser.MultiplicativeExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
@@ -113,53 +113,51 @@ namespace PoorExcel
             }
         }
 
-        public override double VisitMinExpr([NotNull] PoorGrammarParser.MinExprContext context)
+        public override int VisitMinExpr([NotNull] PoorGrammarParser.MinExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
 
-            return Math.Min(left, right);
+            if (context.operatorToken.Type == PoorGrammarLexer.MIN)
+            {
+                return Math.Min(left, right);
+            }
+            else
+            {
+                return Math.Max(left, right);
+            }
         }
 
-        public override double VisitMaxExpr([NotNull] PoorGrammarParser.MaxExprContext context)
+        public override int VisitModExpr([NotNull] PoorGrammarParser.ModExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
 
-            return Math.Max(left, right);
+            if (context.operatorToken.Type == PoorGrammarLexer.MOD)
+            {
+                return left % right;
+            }
+            else
+            {
+                return left / right;
+            }
         }
 
-        public override double VisitModExpr([NotNull] PoorGrammarParser.ModExprContext context)
-        {
-            var left = WalkLeft(context);
-            var right = WalkRight(context);
-
-            return left % right;
-        }
-
-        public override double VisitDivExpr([NotNull] PoorGrammarParser.DivExprContext context)
-        {
-            var left = WalkLeft(context);
-            var right = WalkRight(context);
-
-            return left / right;
-        }
-
-        public override double VisitDecExpr([NotNull] PoorGrammarParser.DecExprContext context)
+        public override int VisitIncExpr([NotNull] PoorGrammarParser.IncExprContext context)
         {
             var left = WalkLeft(context);
 
-            return --left;
+            if (context.operatorToken.Type == PoorGrammarLexer.INC)
+            {
+                return ++left;
+            }
+            else
+            {
+                return --left;
+            }
         }
 
-        public override double VisitIncExpr([NotNull] PoorGrammarParser.IncExprContext context)
-        {
-            var left = WalkLeft(context);
-
-            return ++left;
-        }
-
-        public override double VisitNotExpr([NotNull] PoorGrammarParser.NotExprContext context)
+        public override int VisitNotExpr([NotNull] PoorGrammarParser.NotExprContext context)
         {
             var left = WalkLeft(context);
 
@@ -171,29 +169,7 @@ namespace PoorExcel
             return 0;
         }
 
-        public override double VisitIsMoreExpr([NotNull] PoorGrammarParser.IsMoreExprContext context)
-        {
-            var left = WalkLeft(context);
-            var right = WalkRight(context);
-            if (left > right)
-            {
-                return 1;
-            }
-            return 0;
-        }
-
-        public override double VisitIsLessExpr([NotNull] PoorGrammarParser.IsLessExprContext context)
-        {
-            var left = WalkLeft(context);
-            var right = WalkRight(context);
-            if (left < right)
-            {
-                return 1;
-            }
-            return 0;
-        }
-
-        public override double VisitIsEqualExpr([NotNull] PoorGrammarParser.IsEqualExprContext context)
+        public override int VisitIsEqualExpr([NotNull] PoorGrammarParser.IsEqualExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
@@ -204,21 +180,35 @@ namespace PoorExcel
             return 0;
         }
 
-        public override double VisitIsMoreOrEqualExpr([NotNull] PoorGrammarParser.IsMoreOrEqualExprContext context)
+        public override int VisitCompareExpr([NotNull] PoorGrammarParser.CompareExprContext context)
         {
             var left = WalkLeft(context);
             var right = WalkRight(context);
-            if (left >= right)
-            {
-                return 1;
-            }
-            return 0;
-        }
 
-        public override double VisitIsLessOrEqualExpr([NotNull] PoorGrammarParser.IsLessOrEqualExprContext context)
-        {
-            var left = WalkLeft(context);
-            var right = WalkRight(context);
+            switch(context.operatorToken.Type)
+            {
+                case PoorGrammarLexer.ISMORE:
+                    if (left > right)
+                    {
+                        return 1;
+                    }
+                    return 0;
+
+                case PoorGrammarLexer.ISLESS:
+                    if (left < right)
+                    {
+                        return 1;
+                    }
+                    return 0;
+
+                case PoorGrammarLexer.ISMOREOREQUAL:
+                    if (left >= right)
+                    {
+                        return 1;
+                    }
+                    return 0;
+            }
+
             if (left <= right)
             {
                 return 1;
@@ -226,12 +216,12 @@ namespace PoorExcel
             return 0;
         }
 
-        private double WalkLeft(PoorGrammarParser.ExpressionContext context)
+        private int WalkLeft(PoorGrammarParser.ExpressionContext context)
         {
             return Visit(context.GetRuleContext<PoorGrammarParser.ExpressionContext>(0));
         }
 
-        private double WalkRight(PoorGrammarParser.ExpressionContext context)
+        private int WalkRight(PoorGrammarParser.ExpressionContext context)
         {
             return Visit(context.GetRuleContext<PoorGrammarParser.ExpressionContext>(1));
         }

@@ -10,18 +10,12 @@ expression:
 	|expression EXPONENT expression #ExponentialExpr
 	|expression operatorToken=(MULTIPLY | DIVIDE) expression #MultiplicativeExpr
 	|expression operatorToken=(ADD | SUBTRACT) expression #AdditiveExpr
-	|MIN LPAREN expression COMA expression RPAREN #MinExpr
-	|MAX LPAREN expression COMA expression RPAREN #MaxExpr
-	|MOD LPAREN expression COMA expression RPAREN #ModExpr
-	|DIV LPAREN expression COMA expression RPAREN #DivExpr
-	|INC LPAREN expression RPAREN #IncExpr
-	|DEC LPAREN expression RPAREN #DecExpr
+	|operatorToken=(MIN | MAX) LPAREN expression COMA expression RPAREN #MinExpr
+	|operatorToken=(MOD | DIV) LPAREN expression COMA expression RPAREN #ModExpr
+	|operatorToken=(INC | DEC) LPAREN expression RPAREN #IncExpr
 	|NOT LPAREN expression RPAREN #NotExpr
-	|expression ISMORE expression #IsMoreExpr
-	|expression ISLESS expression #IsLessExpr
+	|expression operatorToken=(ISMORE | ISLESS | ISMOREOREQUAL | ISLESSOREQUAL) expression #CompareExpr
 	|expression ISEQUAL expression #IsEqualExpr
-	|expression ISMOREOREQUAL expression #IsMoreOrEqualExpr
-	|expression ISLESSOREQUAL expression #IsLessOrEqualExpr
 	|NUMBER #NumberExpr
 	|IDENTIFIER #IdentifierExpr;
 
@@ -29,7 +23,7 @@ expression:
 * Lexer Rules
 */
 
-NUMBER : INT ('.' INT)?;
+NUMBER : INT;
 IDENTIFIER : [A-Z]+[0-9]+('=')?;
 
 INT:('0'..'9')+;

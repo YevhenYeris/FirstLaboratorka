@@ -7,9 +7,9 @@ using System.Windows.Forms;
 
 namespace PoorExcel
 {
-    class PoorCalculator
+    public class PoorCalculator
     {
-        public static double Evaluate(string expression)
+        public static int Evaluate(string expression)
         {
             var lexer = new PoorGrammarLexer(new AntlrInputStream(expression));
             lexer.RemoveErrorListeners();
