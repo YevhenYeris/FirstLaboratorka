@@ -116,9 +116,20 @@ namespace PoorExcel.Tests
             actual = cell.GetContent();
             Assert.AreEqual(expected, actual);
 
+            
+        }
+
+        [TestMethod()]
+        public void IsResultShownTest()
+        {
             /*
              * Дія методу після зміни параметра IsResultShown
              */
+
+            PoorCell cell = new PoorCell(0, 0);
+
+            string expected = "";
+            string actual = "";
 
             cell = new PoorCell(0, 0, "123");
             expected = "123";
@@ -168,12 +179,20 @@ namespace PoorExcel.Tests
             Assert.AreEqual(expected, actual);
         }
 
-        [TestMethod()]
-        public void EvaluateTest()
+
+
+
+
+
+
+
+        /*public void EvaluateTest()
         {
-            /*
-             * Запобігання рекурсії
-             */
+            
+            //  Запобігання рекурсії
+             
+            PoorEcxel.indexToCell.Add(new Index(0, 0), new PoorCell(0, 0, "=G4"));
+            PoorCalculator.Evaluate("G4=+A5");
 
             PoorEcxel.indexToCell.Add(new Index(1, 1), new PoorCell(1, 1, "=A5"));
             try
@@ -205,6 +224,6 @@ namespace PoorExcel.Tests
             {
                 Assert.Fail();
             }
-        }
+        }*/
     }
 }

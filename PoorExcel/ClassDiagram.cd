@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="PoorExcel.PoorCell">
-    <Position X="3.25" Y="5" Width="1.5" />
+    <Position X="3.25" Y="4" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAEAAAAAAIAABAAAAAQAABAAAAAQAGAQAAAAAAI=</HashCode>
       <FileName>PoorCell.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="System.Windows.Forms.DataGridViewTextBoxCell" Collapsed="true">
-    <Position X="3.25" Y="3.5" Width="1.5" />
+    <Position X="3.25" Y="3" Width="1.5" />
     <NestedTypes>
       <Class Name="System.Windows.Forms.DataGridViewTextBoxCell.DataGridViewTextBoxCellAccessibleObject" Collapsed="true">
         <TypeIdentifier />
@@ -17,7 +17,7 @@
     <TypeIdentifier />
   </Class>
   <Class Name="System.Windows.Forms.DataGridViewCell" Collapsed="true">
-    <Position X="3.25" Y="2" Width="1.5" />
+    <Position X="3.25" Y="1.75" Width="1.5" />
     <TypeIdentifier />
   </Class>
   <Class Name="System.Windows.Forms.DataGridViewElement" Collapsed="true">
@@ -25,7 +25,7 @@
     <TypeIdentifier />
   </Class>
   <Class Name="PoorExcel.PoorVisitor">
-    <Position X="9" Y="0.75" Width="1.5" />
+    <Position X="9.75" Y="0.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>gggAQAIAAAAAAqAAAAAAQAAAAAAAAAAAIAIJIAAQACA=</HashCode>
       <FileName>PoorVisitor.cs</FileName>
@@ -42,22 +42,38 @@
     <Position X="5.25" Y="0.75" Width="1.5" />
     <TypeIdentifier />
   </Class>
-  <Class Name="PoorExcel.PoorEcxel" Collapsed="true">
-    <Position X="7.25" Y="0.75" Width="1.5" />
+  <Class Name="PoorExcel.PoorEcxel">
+    <Position X="7.75" Y="0.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="indeces" Type="PoorExcel.Coord" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="4.562" />
+        <Point X="6.75" Y="4.562" />
+      </Path>
+    </AssociationLine>
     <TypeIdentifier>
       <HashCode>gAIGDAQSLCACQAADCgCAAhUCAMBEMAADnQkEQBAEACY=</HashCode>
       <FileName>Form1.cs</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_tableSize" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Field Name="indeces" />
+      <Field Name="indexToCell" />
+    </ShowAsCollectionAssociation>
   </Class>
   <Struct Name="PoorExcel.Coord">
-    <Position X="7.25" Y="2" Width="1.5" />
+    <Position X="5.25" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAA=</HashCode>
       <FileName>Form1.cs</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="PoorExcel.Index">
-    <Position X="9" Y="5.5" Width="1.5" />
+    <Position X="9.75" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAQAAEAAAAAABgAAAAAAA=</HashCode>
       <FileName>Form1.cs</FileName>

@@ -44,7 +44,8 @@ namespace PoorExcel
 
                     if (!PoorEcxel.indexToCell.ContainsKey(index))
                     {
-                        PoorEcxel.indexToCell.Add(index, new PoorCell(PoorEcxel.indeces[result].x, PoorEcxel.indeces[result].y, "0"));
+                        PoorEcxel.indexToCell.Add(index, new PoorCell(PoorEcxel.indeces[result].x,
+                                                                      PoorEcxel.indeces[result].y, "0"));
                     }
 
                     string expr = PoorEcxel.indexToCell[index].Result;

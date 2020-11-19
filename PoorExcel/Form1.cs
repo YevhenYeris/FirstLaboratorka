@@ -240,17 +240,23 @@ namespace PoorExcel
             if (buttonDisplay.Text == "РЕЗУЛЬТАТ")
             {
                 buttonDisplay.Text = "ВИРАЗ";
+                foreach (var item in indexToCell)
+                {
+                    item.Value.IsResultShown = false;
+                    dataGrid.Rows[item.Key.y].Cells[item.Key.x].Value = item.Value.GetContent();
+                }
             }
             else
             {
                 buttonDisplay.Text = "РЕЗУЛЬТАТ";
+                foreach (var item in indexToCell)
+                {
+                    item.Value.IsResultShown = true;
+                    dataGrid.Rows[item.Key.y].Cells[item.Key.x].Value = item.Value.GetContent();
+                }
             }
 
-            foreach (var item in indexToCell)
-            {
-                item.Value.IsResultShown = !item.Value.IsResultShown;
-                dataGrid.Rows[item.Key.y].Cells[item.Key.x].Value = item.Value.GetContent();
-            }
+            
         }
         private void UpdateTable()
         //Оновлення значень клітинок таблиці
